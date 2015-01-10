@@ -20,3 +20,6 @@ So only call this filter early on in your 16 bit chain or run f3kdb afterwards.
 
 #####To-Do
 Possibly write some of the masking and frame duplicating more efficiently
+
+
+Feel free to report issues
