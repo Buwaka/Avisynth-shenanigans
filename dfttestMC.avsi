@@ -51,7 +51,10 @@ function dfttestMC(clip input, clip "pp", int "mc", bool "mdg", bool "Y", bool "
 	V = default(V, true)
 	tbsize = default(tbsize, mc * 2 + 1)
 	dfttest_params = default(dfttest_params, "")
-	overlap = default(overlap, 2)
+	blksize = default(blksize,16)
+	blksize2 = int(blksize/2) + (int(blksize/2)%2)
+	overlap = default(overlap,blksize2)
+	overlap2 = int(overlap/2) + (int(overlap/2)%2)
 	rStr          = default( rStr, 1.0 )
 	Amp          = default( Amp, 0.0625 )
 	# Set chroma parameters.
@@ -61,8 +64,8 @@ function dfttestMC(clip input, clip "pp", int "mc", bool "mdg", bool "Y", bool "
 	# Prepare supersampled clips.
 	
 	pp = (pp_enabled) ? pp.dither_luma_rebuild(S0=rStr,c=Amp,lsb_in=pp_lsb_in,lsb_out=false,uv=((U&&v)?3:1)) : nop()
-	pp_super = pp_enabled ? MSuper(pp, pel=pel, chroma=chroma,rfilter=super_filter) : MSuper(input, pel=pel, chroma=chroma)
-	super = pp_enabled ? input.ditherpost(mode=7).MSuper(pel=pel, levels=1, chroma=chroma) : pp_super
+	pp_super = pp_enabled ? MSuper(pp, pel=pel, chroma=chroma,rfilter=super_filter) : MSuper(input8, pel=pel, chroma=chroma)
+	super = pp_enabled ? input8.MSuper(pel=pel, levels=1, chroma=chroma) : pp_super
 	recalc_sup =  pp_enabled ? MSuper(pp,pel=pel, levels=1, chroma=chroma) : pp_super
 	
 	# Motion vector search.
@@ -79,16 +82,16 @@ function dfttestMC(clip input, clip "pp", int "mc", bool "mdg", bool "Y", bool "
 
 	if(recalculate)
 	{
-	b5vec = MRecalculate(recalc_sup,b5vec , chroma=chroma, search=search, searchparam=searchparam, overlap=int(overlap/2), blksize=int(blksize/2), dct=dct,thSAD=int(thSAD/2),truemotion=truemotion)
-	b4vec = MRecalculate(recalc_sup,b4vec , chroma=chroma, search=search, searchparam=searchparam, overlap=int(overlap/2), blksize=int(blksize/2), dct=dct,thSAD=int(thSAD/2),truemotion=truemotion)
-	b3vec = MRecalculate(recalc_sup,b3vec , chroma=chroma, search=search, searchparam=searchparam, overlap=int(overlap/2), blksize=int(blksize/2), dct=dct,thSAD=int(thSAD/2),truemotion=truemotion)
-	b2vec = MRecalculate(recalc_sup,b2vec , chroma=chroma, search=search, searchparam=searchparam, overlap=int(overlap/2), blksize=int(blksize/2), dct=dct,thSAD=int(thSAD/2),truemotion=truemotion)
-	b1vec = MRecalculate(recalc_sup,b1vec , chroma=chroma, search=search, searchparam=searchparam, overlap=int(overlap/2), blksize=int(blksize/2), dct=dct,thSAD=int(thSAD/2),truemotion=truemotion)
-	f1vec = MRecalculate(recalc_sup,f1vec, chroma=chroma, search=search, searchparam=searchparam, overlap=int(overlap/2), blksize=int(blksize/2), dct=dct,thSAD=int(thSAD/2),truemotion=truemotion)
-	f2vec = MRecalculate(recalc_sup,f2vec, chroma=chroma, search=search, searchparam=searchparam, overlap=int(overlap/2), blksize=int(blksize/2), dct=dct,thSAD=int(thSAD/2),truemotion=truemotion)
-	f3vec = MRecalculate(recalc_sup,f3vec, chroma=chroma, search=search, searchparam=searchparam, overlap=int(overlap/2), blksize=int(blksize/2), dct=dct,thSAD=int(thSAD/2),truemotion=truemotion)
-	f4vec = MRecalculate(recalc_sup,f4vec, chroma=chroma, search=search, searchparam=searchparam, overlap=int(overlap/2), blksize=int(blksize/2), dct=dct,thSAD=int(thSAD/2),truemotion=truemotion)
-	f5vec = MRecalculate(recalc_sup,f5vec, chroma=chroma, search=search, searchparam=searchparam, overlap=int(overlap/2), blksize=int(blksize/2), dct=dct,thSAD=int(thSAD/2),truemotion=truemotion)
+	b5vec = MRecalculate(recalc_sup,b5vec , chroma=chroma, search=search, searchparam=searchparam, overlap=overlap2, blksize=blksize2, dct=dct,thSAD=int(thSAD/2),truemotion=truemotion)
+	b4vec = MRecalculate(recalc_sup,b4vec , chroma=chroma, search=search, searchparam=searchparam, overlap=overlap2, blksize=blksize2, dct=dct,thSAD=int(thSAD/2),truemotion=truemotion)
+	b3vec = MRecalculate(recalc_sup,b3vec , chroma=chroma, search=search, searchparam=searchparam, overlap=overlap2, blksize=blksize2, dct=dct,thSAD=int(thSAD/2),truemotion=truemotion)
+	b2vec = MRecalculate(recalc_sup,b2vec , chroma=chroma, search=search, searchparam=searchparam, overlap=overlap2, blksize=blksize2, dct=dct,thSAD=int(thSAD/2),truemotion=truemotion)
+	b1vec = MRecalculate(recalc_sup,b1vec , chroma=chroma, search=search, searchparam=searchparam, overlap=overlap2, blksize=blksize2, dct=dct,thSAD=int(thSAD/2),truemotion=truemotion)
+	f1vec = MRecalculate(recalc_sup,f1vec, chroma=chroma, search=search, searchparam=searchparam, overlap=overlap2, blksize=blksize2, dct=dct,thSAD=int(thSAD/2),truemotion=truemotion)
+	f2vec = MRecalculate(recalc_sup,f2vec, chroma=chroma, search=search, searchparam=searchparam, overlap=overlap2, blksize=blksize2, dct=dct,thSAD=int(thSAD/2),truemotion=truemotion)
+	f3vec = MRecalculate(recalc_sup,f3vec, chroma=chroma, search=search, searchparam=searchparam, overlap=overlap2, blksize=blksize2, dct=dct,thSAD=int(thSAD/2),truemotion=truemotion)
+	f4vec = MRecalculate(recalc_sup,f4vec, chroma=chroma, search=search, searchparam=searchparam, overlap=overlap2, blksize=blksize2, dct=dct,thSAD=int(thSAD/2),truemotion=truemotion)
+	f5vec = MRecalculate(recalc_sup,f5vec, chroma=chroma, search=search, searchparam=searchparam, overlap=overlap2, blksize=blksize2, dct=dct,thSAD=int(thSAD/2),truemotion=truemotion)
 	}
 	# Optional MDegrain.
 	try {
@@ -121,8 +124,9 @@ function dfttestMC(clip input, clip "pp", int "mc", bool "mdg", bool "Y", bool "
 		\ mc == 3 ? Interleave(f3clip, f2clip, f1clip, degrained8, b1clip, b2clip, b3clip) :
 		\ mc == 2 ? Interleave(f2clip, f1clip, degrained8, b1clip, b2clip) :
 		\ Interleave(f1clip, degrained8, b1clip)
-		degrainedmc=degrained.changefps(framerate(input)*(mc*2+1),linear=true).assumefps(framerate(input))
+		degrainedmc=degrained.changefps(framerate(input)*(mc*2+1),linear=true)
 		degrainedmc = degrainedmc.trim(1,framecount(degrainedmc)) ++ trim(degrainedmc,framecount(degrainedmc)-1,framecount(degrainedmc))
+		#degrainedmc = degrained.changefps(framerate(input)*(mc*2+1),linear=true)
 		interleaved = lsb_enable? dither_merge16_8(degrainedmc,interleaved.dither_convert_8_to_16(),mt_makediff(interleaved,degrainedmc,u=3,v=3).mt_Lut("x 128 != 255 0 ?",u=3,v=3),u=3,v=3) : interleaved
 		
 	# Perform dfttest. Exception handling required for official dfttest.
