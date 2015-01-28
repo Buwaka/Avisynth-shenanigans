@@ -98,7 +98,7 @@ function dfttestMC(clip input, clip "pp", int "mc", bool "mdg", bool "Y", bool "
 		degrained = mc >= 3 && mdg ? MDeGrain3(input8, super, b1vec, f1vec, b2vec, f2vec, b3vec, f3vec, thSAD=mdgSAD, plane=plane, thSCD1=thSCD1, thSCD2=thSCD2, lsb=true) :
 			\ mc == 2 && mdg ? MDeGrain2(input8, super, b1vec, f1vec, b2vec, f2vec, thSAD=mdgSAD, plane=plane, thSCD1=thSCD1, thSCD2=thSCD2, lsb=true) :
 			\ mdg ? MDeGrain1(input8, super, b1vec, f1vec, thSAD=mdgSAD, plane=plane, thSCD1=thSCD1, thSCD2=thSCD2, lsb=true) : input
-			degrained8 = lsb ? degrained.ditherpost(mode=-1) : degrained.ditherpost(mode=7)
+			degrained8 = lsb ? degrained.dither_get_msb() : degrained.ditherpost(mode=7)
 			lsb_enable = true
 		}
 	catch(err_msg) {
@@ -124,10 +124,11 @@ function dfttestMC(clip input, clip "pp", int "mc", bool "mdg", bool "Y", bool "
 		\ mc == 3 ? Interleave(f3clip, f2clip, f1clip, degrained8, b1clip, b2clip, b3clip) :
 		\ mc == 2 ? Interleave(f2clip, f1clip, degrained8, b1clip, b2clip) :
 		\ Interleave(f1clip, degrained8, b1clip)
-		degrainedmc=degrained.changefps(framerate(input)*(mc*2+1),linear=true)
-		degrainedmc = degrainedmc.trim(1,framecount(degrainedmc)) ++ trim(degrainedmc,framecount(degrainedmc)-1,framecount(degrainedmc))
-		#degrainedmc = degrained.changefps(framerate(input)*(mc*2+1),linear=true)
-		interleaved = lsb_enable? dither_merge16_8(degrainedmc,interleaved.dither_convert_8_to_16(),mt_makediff(interleaved,degrainedmc,u=3,v=3).mt_Lut("x 128 != 255 0 ?",u=3,v=3),u=3,v=3) : interleaved
+		degrainedmc=degrained.changefps(interleaved,linear=true)
+		mask=mt_logic(interleaved,degrainedmc.dither_get_msb(), "xor",y=3,u=3,v=3).mt_binarize(0,y=3,u=3,v=3)
+		interleaved = lsb_enable && lsb ? mt_merge(degrainedmc,interleaved.dither_convert_8_to_16(),stackvertical(mask,mask),u=3,v=3) : interleaved #more optimized version than the one below
+		#interleaved = lsb_enable ? dither_merge16_8(degrainedmc,interleaved.dither_convert_8_to_16(),mt_Lutxy(degrainedmc.ditherpost(mode=7),interleaved,"x y - 0 != 255 0 ?",u=3,v=3),u=3,v=3) : interleaved
+
 		
 	# Perform dfttest. Exception handling required for official dfttest.
 	try {
