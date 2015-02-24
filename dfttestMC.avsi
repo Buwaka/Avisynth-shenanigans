@@ -126,7 +126,7 @@ function dfttestMC(clip input, clip "pp", int "mc", bool "mdg", bool "Y", bool "
 		\ Interleave(f1clip, degrained8, b1clip)
 		degrainedmc=degrained.changefps(interleaved,linear=true)
 		mask=mt_logic(interleaved,degrainedmc.dither_get_msb(), "xor",y=3,u=3,v=3).mt_binarize(0,y=3,u=3,v=3)
-		interleaved = lsb_enable && lsb ? mt_merge(degrainedmc,interleaved.dither_convert_8_to_16(),stackvertical(mask,mask),u=3,v=3) : interleaved #more optimized version than the one below
+		interleaved = lsb_enable && lsb ? dither_merge16(degrainedmc,interleaved.dither_convert_8_to_16(),stackvertical(mask,mask),u=3,v=3) : interleaved #more optimized version than the one below
 		#interleaved = lsb_enable ? dither_merge16_8(degrainedmc,interleaved.dither_convert_8_to_16(),mt_Lutxy(degrainedmc.ditherpost(mode=7),interleaved,"x y - 0 != 255 0 ?",u=3,v=3),u=3,v=3) : interleaved
 
 		
