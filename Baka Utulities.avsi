@@ -1,14 +1,15 @@
 
-function limitring(clip source,float "percentage",int "y",int "u",int "v")
+function limitring(clip source,float "percentage",int "radius",int "y",int "u",int "v")
 {
 y=default(y,3)
 u=default(u,2)
 v=default(v,2)
+radius=default(radius,2)
 percentage=default(percentage,4)
 source
 dmask=tcanny(1).mt_expand().mt_expand().mt_expand()
 dither_convert_8_to_16()
-dither_bilateral16(ref=dehalo_alpha_mt(2,2,0.5,1,50,50,2),thr=2,u=u,v=v,y=y)
+Dither_box_filter16(radius=radius,y=y,u=u,v=v)
 ditherpost(mode=7)
 mt_lutxy(source,mt_merge(source,last,dmask),"x y min x - 0 < x y min x y x min - "+string(percentage)+" / + x y min ?",y=y,u=u,v=v)
 repair(last,source,13)
