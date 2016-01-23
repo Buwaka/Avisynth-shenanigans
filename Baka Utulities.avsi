@@ -1,15 +1,14 @@
 
-function limitring(clip source,float "percentage",int "radius",int "y",int "u",int "v")
+function limitring(clip source,float "percentage",int "y",int "u",int "v")
 {
 y=default(y,3)
 u=default(u,2)
 v=default(v,2)
-radius=default(radius,2)
 percentage=default(percentage,4)
 source
 dmask=tcanny(1).mt_expand().mt_expand().mt_expand()
 dither_convert_8_to_16()
-Dither_box_filter16(radius=radius,y=y,u=u,v=v)
+dither_bilateral16(ref=dehalo_alpha_mt(2,2,0.5,1,50,50,2),thr=2,u=u,v=v,y=y)
 ditherpost(mode=7)
 mt_lutxy(source,mt_merge(source,last,dmask),"x y min x - 0 < x y min x y x min - "+string(percentage)+" / + x y min ?",y=y,u=u,v=v)
 repair(last,source,13)
@@ -74,4 +73,58 @@ mt_invert(u=2,v=2)
 overlay=tmaskcleaner(50)
 mt_merge(last,mt_lut(y=0),overlay,u=2,v=2)
 return mt_expand_multi(mode="square",sw=expand,sh=expand,u=2,v=2)
+}
+
+function KNLMeansCL_chroma(clip c, int "d", int "a", int "s", int "wmode", float "h", string "device_type", int "device_id", bool "lsb_inout", bool "info")
+{
+d  = default(d,0)
+a = default(a,2)
+s = default(s,4)
+wmode = default(wmode,1)
+h = default(h,1.2)
+device_type = default(device_type,"default")
+device_id = default(device_id,0)
+lsb_inout = default(lsb_inout,true)
+info = default(info,false)
+
+c
+u=utoy().KNLmeansCL(d,a,s,false,wmode,h,device_type=device_type,lsb_inout=lsb_inout,info=info)
+v=vtoy().KNLmeansCL(d,a,s,false,wmode,h,device_type=device_type,lsb_inout=lsb_inout,info=info)
+
+return ytouv(u,v,last)
+}
+
+function tNLMeans_chroma(clip c,int "Ax", int "Ay", int "Az", int "Sx", int "Sy", int "Bx", int "By", bool "ms", int "rm", float "a",float "h", bool "sse")
+{
+ax = default(ax,4)
+ay = default(ay,4)
+az = default(az,4)
+sx = default(sx,4)
+sy = default(sy,4)
+ms = default(ms,False)
+rm = default(rm,6)
+a = default(a,1)
+h = default(h,1.2)
+sse = default(sse,true)
+
+c
+u=utoy().tNLmeans(Ax,Ay,Az, Sx, Sy, Bx, By, ms, rm, a, h, sse)
+v=vtoy().tNLmeans(Ax,Ay,Az, Sx, Sy, Bx, By, ms, rm, a, h, sse)
+
+return ytouv(u,v,last)
+}
+
+function rgb_linecheck(clip c,clip mask,int "Rstr",int "Gstr",int "Bstr")
+{
+Rstr = default(Rstr,160)
+Gstr = default(Gstr,160)
+Bstr = default(Bstr,160)
+c
+pre=removegrain(12)
+rgb=pre.converttorgb(matrix="Rec709")
+red=rgb.ShowRed("yv12").mt_lut("x "+string(Rstr)+" > 255 0 ?")
+green=rgb.showgreen("yv12").mt_lut("x "+string(Gstr)+" > 255 0 ?")
+blue=rgb.showblue("yv12").mt_lut("x "+string(Bstr)+" > 255 0 ?")
+mt_logic(red,green,"or").mt_logic(blue,"or")
+return mt_merge(mask,blankclip(c,color=$000000),last)
 }
